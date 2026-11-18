@@ -56,13 +56,61 @@ sync_concurrency = _sibling("concurrency").sync_concurrency
 build_roster = _sibling("roster").build_roster
 
 
-def ensure_user_config() -> tuple[Path, Path]:
-    """Return the live (team.jsonc, state.json) paths.
+def _template_path() -> Path:
+    """Locate the shipped ``templates/team.jsonc`` for either install layout.
 
-    Task 6 replaces this body with template-copy logic; until then the paths
-    point at the live files directly.
+    - git-clone install: ``templates/`` sits next to ``.hermes-plugin/``.
+    - flattened install: ``templates/`` sits next to this module.
+
+    Raises loudly when neither matches: a missing template with no live config
+    is a broken install, and the hook surfaces this as a visible warning.
     """
-    return LIVE_DIR / "team.jsonc", LIVE_DIR / "state.json"
+    here = Path(__file__).resolve().parent
+    candidates = (here.parent / "templates" / "team.jsonc", here / "templates" / "team.jsonc")
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    raise RuntimeError(
+        "software-team plugin: cannot find templates/team.jsonc "
+        f"(looked at {candidates}). Reinstall the plugin or restore the template."
+    )
+
+
+def _create_new(path: Path, data: str) -> bool:
+    """Create *path* with *data*, only if it does not exist yet.
+
+    Returns True when this call created the file. ``"x"`` is ``O_CREAT|O_EXCL``:
+    creation cannot clobber a file that appeared after the caller's ``exists()``
+    check, so "never overwrite" holds under a concurrent first run too. A failed
+    write removes its partial file.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with open(path, "x", encoding="utf-8") as handle:
+            handle.write(data)
+    except FileExistsError:
+        return False  # another session won the race; its file stays untouched
+    except BaseException:
+        path.unlink(missing_ok=True)
+        raise
+    return True
+
+
+def ensure_user_config() -> tuple[Path, Path]:
+    """Return the live (team.jsonc, state.json) paths, seeding them on first run.
+
+    team.jsonc is copied from the shipped template and state.json (the route
+    ownership list) starts empty. Both are created only when absent: an existing
+    file — the user's edits included — is never rewritten.
+    """
+    team_path = LIVE_DIR / "team.jsonc"
+    state_path = LIVE_DIR / "state.json"
+    if not team_path.exists():
+        if _create_new(team_path, _template_path().read_text(encoding="utf-8")):
+            _log.info("software-team: seeded %s from the shipped template", team_path)
+    if not state_path.exists():
+        _create_new(state_path, "[]\n")
+    return team_path, state_path
 
 
 def _skills_dir() -> str:
