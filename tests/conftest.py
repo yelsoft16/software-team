@@ -28,6 +28,7 @@ for _name, _filename in (
     ("st_config", "config.py"),
     ("st_sync", "sync.py"),
     ("st_concurrency", "concurrency.py"),
+    ("st_maintenance", "maintenance.py"),
 ):
     _load(_name, _filename)
 del _name, _filename
