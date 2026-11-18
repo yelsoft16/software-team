@@ -44,17 +44,20 @@ def test_register_registers_skill_path():
     mod = _load_plugin()
     ctx = unittest.mock.Mock()
     mod.register(ctx)
-    ctx.register_skill.assert_called_once()
-    name, path = ctx.register_skill.call_args.args
-    assert name == "team-protocol"
-    # register_skill requires a pathlib.Path; a str raises AttributeError and
-    # Hermes silently disables the whole plugin.
-    assert isinstance(path, pathlib.Path)
-    assert path.name == "SKILL.md"
-    # The description kwarg is the skill's catalogue selection signal: a blank
-    # description (register_skill defaults to "") leaves the model nothing to
-    # select on. Pin a non-empty string (T1 review, Important).
-    assert ctx.register_skill.call_args.kwargs["description"]
+    # register() registers two skills, in order — spec-tracking assertion that
+    # follows register()'s behavior.
+    names = [c.args[0] for c in ctx.register_skill.call_args_list]
+    assert names == ["team-protocol", "memory-maintenance"]
+    for call in ctx.register_skill.call_args_list:
+        _, path = call.args
+        # register_skill requires a pathlib.Path; a str raises AttributeError and
+        # Hermes silently disables the whole plugin.
+        assert isinstance(path, pathlib.Path)
+        assert path.name == "SKILL.md"
+        # The description kwarg is the skill's catalogue selection signal: a blank
+        # description (register_skill defaults to "") leaves the model nothing to
+        # select on. Pin a non-empty string (T1 review, Important).
+        assert call.kwargs["description"].strip()
 
 
 def test_register_hook_is_noop_placeholder():

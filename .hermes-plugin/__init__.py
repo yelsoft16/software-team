@@ -333,3 +333,7 @@ def register(ctx):
     # Hermes silently disables the whole plugin.
     ctx.register_skill("team-protocol", skill_md, description=description)
     ctx.register_hook("pre_llm_call", pre_llm_call)
+
+    skill_md = Path(skills_dir) / "memory-maintenance" / "SKILL.md"
+    description = _frontmatter_value(skill_md.read_text(encoding="utf-8"), "description")
+    ctx.register_skill("memory-maintenance", skill_md, description=description)
