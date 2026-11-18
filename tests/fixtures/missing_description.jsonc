@@ -1,0 +1,9 @@
+{
+  "agents": [
+    {
+      "name": "writer",
+      "model": "mimo-v2.6-flash",
+      "provider": "api-yelsoft-online"
+    }
+  ]
+}

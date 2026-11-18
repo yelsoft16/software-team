@@ -1,0 +1,6 @@
+{
+  // trailing comma plus a value-less member: json.loads must reject this
+  "agents": [
+    { "name": "explore", },
+  ]
+}

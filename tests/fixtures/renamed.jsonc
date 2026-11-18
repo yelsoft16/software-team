@@ -1,0 +1,19 @@
+// A valid config whose role names differ from the shipped template (roles renamed by the user).
+// Reserved for roster/route-removal tests: the sync must drop the old route, not keep both.
+{
+  "agents": [
+    {
+      "name": "scout",
+      "description": "Renamed from explore: read-only codebase exploration",
+      "model": "gemini-3.1-flash-lite",
+      "provider": "api-yelsoft-online"
+    },
+    {
+      "name": "auditor",
+      "description": "Renamed from reviewer: adversarial code review",
+      "model": "glm-5.3-flash",
+      "provider": "api-yelsoft-online",
+      "reasoning": "max"
+    }
+  ]
+}
