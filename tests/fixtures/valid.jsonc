@@ -1,0 +1,20 @@
+// Two agents, both comment styles, and a string that must not be treated as a comment.
+{
+  /* block comment before the first agent */
+  "agents": [
+    {
+      "name": "explore",
+      "description": "Read-only codebase exploration",
+      "model": "gemini-3.1-flash-lite",
+      "provider": "api-yelsoft-online",
+      "prompt": "Docs live at https://example.com/docs // this is a string, not a comment"
+    },
+    {
+      "name": "researcher",
+      "description": "External research and source gathering",
+      "model": "deepseek-v4.1-flash",
+      "provider": "api-yelsoft-online",
+      "reasoning": "max" // legal level
+    }
+  ]
+}

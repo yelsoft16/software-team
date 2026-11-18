@@ -1,0 +1,12 @@
+{
+  "agents": [
+    {
+      "name": "researcher",
+      "description": "External research and source gathering",
+      "model": "deepseek-v4.1-flash",
+      "provider": "api-yelsoft-online",
+      // not in hermes_constants.VALID_REASONING_EFFORTS
+      "reasoning": "turbo"
+    }
+  ]
+}

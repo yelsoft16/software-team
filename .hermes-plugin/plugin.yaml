@@ -1,0 +1,7 @@
+name: software-team
+version: 0.1.0
+description: Role roster, model routing, and orchestration protocol for a software team of agents
+author: yelsoft
+provides_hooks:
+  - pre_llm_call
+requires_hermes: ">=0.22.5"
