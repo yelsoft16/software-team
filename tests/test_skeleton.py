@@ -36,7 +36,7 @@ def test_skills_dir_points_at_skill_tree():
 def test_skills_dir_raises_when_missing(tmp_path, monkeypatch):
     mod = _load_plugin()
     monkeypatch.setattr(mod, "__file__", str(tmp_path / ".hermes-plugin" / "__init__.py"))
-    with pytest.raises(RuntimeError, match="skills"):
+    with pytest.raises(RuntimeError, match="cannot find the skills/ tree"):
         mod._skills_dir()
 
 
@@ -51,6 +51,10 @@ def test_register_registers_skill_path():
     # Hermes silently disables the whole plugin.
     assert isinstance(path, pathlib.Path)
     assert path.name == "SKILL.md"
+    # The description kwarg is the skill's catalogue selection signal: a blank
+    # description (register_skill defaults to "") leaves the model nothing to
+    # select on. Pin a non-empty string (T1 review, Important).
+    assert ctx.register_skill.call_args.kwargs["description"]
 
 
 def test_register_hook_is_noop_placeholder():
