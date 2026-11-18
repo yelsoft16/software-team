@@ -56,3 +56,71 @@ def test_sync_noop_when_unchanged(mocker):
         st_sync.sync_routes([{"name": "explore", "description": "s", "model": "m", "provider": "p"}], sp)
         store.save_routes.assert_not_called()
         store.set_mode.assert_not_called()
+
+
+def test_sync_skips_nameless_foreign_entry(mocker):
+    store = mocker.Mock()
+    store.routes.return_value = [
+        {"description": "corrupted, no name", "model": "m"},
+        {"name": "handmade", "description": "x", "provider": "p", "model": "m"},
+    ]
+    store.route_default.return_value = ""
+    mocker.patch.object(st_sync, "load_store", return_value=store)
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        sp = pathlib.Path(d) / "state.json"
+        summary = st_sync.sync_routes(
+            [{"name": "explore", "description": "s", "model": "m", "provider": "p"}], sp)
+        merged = store.save_routes.call_args[0][0]
+        # Nameless entry left untouched (never owned, never deleted)…
+        assert merged[0] == {"description": "corrupted, no name", "model": "m"}
+        # …other foreign routes preserved, desired routes appended.
+        assert [r.get("name") for r in merged] == [None, "handmade", "explore"]
+        assert summary["skipped_nameless"] == 1
+        assert summary["warning"]
+
+
+def test_route_key_handles_unorderable_values():
+    # dict vs list at the same sorted position: pre-fix, tuple comparison
+    # short-circuits into `dict < list` and raises TypeError.
+    routes = [
+        {"name": "handmade", "description": "x", "model": "m", "extra": {"k": "v"}},
+        {"name": "typed", "description": "x", "model": "m", "extra": ["a"]},
+    ]
+    key = st_sync._route_key(routes)
+    assert key == st_sync._route_key(list(reversed(routes)))  # order-insensitive
+
+
+def test_sync_foreign_route_with_list_value_does_not_raise(mocker):
+    store = mocker.Mock()
+    store.routes.return_value = [
+        {"name": "handmade", "description": "x", "model": "m", "tags": ["a", "b"]},
+        {"name": "typed", "description": "x", "model": "m", "meta": {"k": "v"}},
+    ]
+    store.route_default.return_value = ""
+    mocker.patch.object(st_sync, "load_store", return_value=store)
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        sp = pathlib.Path(d) / "state.json"
+        st_sync.sync_routes([{"name": "explore", "description": "s", "model": "m", "provider": "p"}], sp)
+        merged = store.save_routes.call_args[0][0]
+        assert [r["name"] for r in merged] == ["handmade", "typed", "explore"]
+        assert merged[0]["tags"] == ["a", "b"] and merged[1]["meta"] == {"k": "v"}
+    # Serialization-based key stays order-insensitive with nested values.
+    routes = store.routes.return_value
+    assert st_sync._route_key(routes) == st_sync._route_key(list(reversed(routes)))
+
+
+def test_sync_saves_routes_before_setting_mode(mocker):
+    store = mocker.Mock()
+    store.routes.return_value = []
+    store.route_default.return_value = ""
+    calls = mocker.Mock()
+    calls.attach_mock(store.save_routes, "save_routes")
+    calls.attach_mock(store.set_mode, "set_mode")
+    mocker.patch.object(st_sync, "load_store", return_value=store)
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        sp = pathlib.Path(d) / "state.json"
+        st_sync.sync_routes([{"name": "explore", "description": "s", "model": "m", "provider": "p"}], sp)
+    assert [call[0] for call in calls.mock_calls] == ["save_routes", "set_mode"]

@@ -71,8 +71,13 @@ def build_routes(agents: list[dict]) -> list[dict]:
 
 
 def _route_key(routes: list[dict]) -> tuple:
-    """Order-insensitive signature of a route list: no write for pure reordering."""
-    return tuple(sorted(tuple(sorted(route.items())) for route in routes))
+    """Order-insensitive signature of a route list: no write for pure reordering.
+
+    Serialized per route rather than compared as nested tuples: foreign routes
+    may hold list/dict values (legal YAML) that make tuple comparison raise
+    ``TypeError`` as soon as an unorderable element is reached.
+    """
+    return tuple(sorted(json.dumps(route, sort_keys=True, default=str) for route in routes))
 
 
 def _read_state(state_path: Path) -> list[str]:
@@ -104,19 +109,31 @@ def sync_routes(agents: list[dict], state_path: Path) -> dict:
         desired_by_name = {route["name"]: route for route in desired}
         desired_names = [route["name"] for route in desired]
         desired_set = set(desired_names)
-        foreign = [route for route in current
+        # Foreign config may hold nameless entries (hand-edited or corrupted
+        # YAML). They can't take part in the ownership math, so they're left
+        # untouched in the store and merely counted; a KeyError here would kill
+        # the whole first-turn pipeline.
+        named = [route for route in current if route.get("name")]
+        nameless = [route for route in current if not route.get("name")]
+        foreign = [route for route in named
                    if route["name"] not in previous and route["name"] not in desired_set]
-        merged = foreign + desired
+        merged = nameless + foreign + desired
 
-        current_by_name = {route["name"]: route for route in current}
+        current_by_name = {route["name"]: route for route in named}
         summary = {
             "added": [name for name in desired_names if name not in current_by_name],
             "updated": [name for name in desired_names
                         if name in current_by_name and current_by_name[name] != desired_by_name[name]],
-            "removed": [route["name"] for route in current
+            "removed": [route["name"] for route in named
                         if route["name"] in previous and route["name"] not in desired_set],
             "unchanged": _route_key(merged) == _route_key(current),
+            "skipped_nameless": len(nameless),
         }
+        if summary["skipped_nameless"]:
+            summary["warning"] = (
+                f"{summary['skipped_nameless']} store route(s) lack a 'name' key; "
+                "left untouched, but they cannot be owned or synced."
+            )
         if not summary["unchanged"]:
             # Pass the existing default back unchanged: the store's save keeps any
             # pre-set default when given "" (never removed), so without this a
