@@ -44,8 +44,9 @@ gözetiminde, insanın oturumunda koşar; insansız değişiklik yoktur.
 - Hook pipeline'ı: roster üretildikten sonra interval geçtiyse hatırlatma satırı eklenir
   ve `last_reminded` güncellenir. Bütçe: hatırlatma satırı 1024 karakterlik roster
   bütçesinin dışında sayılır, enjekte edilen toplam metin hook bütçesini (~1KB) aşmaz.
-- Hatırlatma biçimi: `🧹 Hafıza bakımı bekliyor (son bakım N gün önce; MEMORY %87 dolu) —
-  'bakım yapalım' dersen memory-maintenance skill'iyle başlarım.`
+- Hatırlatma biçimi: `🧹 Hafıza bakımı bekliyor (son bakım N gün önce; hafıza %87 dolu) —
+  'bakım yapalım' dersen memory-maintenance skill'iyle başlarım.` (Yüzde, dosya başına
+  gerçek bütçeye göre hesaplanır: MEMORY.md 2200, USER.md 1375 karakter — en dolu dosya.)
 
 ## Bakım prosedürü (`skills/memory-maintenance/SKILL.md`)
 
