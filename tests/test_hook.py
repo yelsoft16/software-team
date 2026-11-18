@@ -90,6 +90,40 @@ def test_roster_line_format_and_protocol_block():
     assert roster.count("\n") == 1 + 2 + 4  # header + 2 agents + 5-line protocol block
 
 
+def test_roster_truncates_with_marker_when_over_budget():
+    mod = _load()
+    agents = [
+        {"name": n, "description": "d" * 200, "model": f"m-{n}", "provider": "p", "reasoning": "high"}
+        for n in ["explore", "researcher", "consultant", "planner", "implementer", "reviewer", "debugger", "writer"]
+    ]
+    roster = mod.build_roster(agents)
+    assert len(roster) <= 1024
+    assert roster.endswith("⚠ roster truncated")
+    # truncation drops whole lines, never mid-character: the header and complete
+    # leading agent lines survive, nothing partial.
+    lines = roster.splitlines()
+    assert lines[0] == "Software team roster:"
+    assert lines[1].startswith("explore — ")
+    assert lines[-1] == "⚠ roster truncated"
+    for line in lines[1:-1]:
+        assert " — " in line and ")" in line
+
+
+def test_roster_no_truncation_within_budget():
+    mod = _load()
+    agents = [
+        {"name": n, "description": f"desc {n}", "model": f"m-{n}", "provider": "p", "reasoning": r}
+        for n, r in zip(
+            ["explore", "researcher", "consultant", "planner", "implementer", "reviewer", "debugger", "writer"],
+            [None, "max", "high", "max", "high", "max", "max", "high"],
+        )
+    ]
+    roster = mod.build_roster(agents)
+    assert len(roster) <= 1024
+    assert "⚠ roster truncated" not in roster
+    assert roster.count("\n") == 1 + 8 + 4  # full protocol block survives
+
+
 def test_live_dir_respects_hermes_home(monkeypatch, tmp_path):
     monkeypatch.setenv("HERMES_HOME", str(tmp_path))
     mod = _load()
