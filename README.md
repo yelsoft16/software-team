@@ -55,6 +55,35 @@ Releases'te (`vX.Y.Z` tag'ları); git kurulumu commit bazında takip edilir.
 3. Oturumun ilk turunda orkestratöre kompakt çizelge + protokol enjekte eder.
    Subagent'lara asla enjekte edilmez.
 
+## Sorun giderme
+
+### Kurulum: "Staged plugin files changed while preparing the update; retry."
+
+Kurulum, klonladığı dosyaların içerik hash'ini yayına almadan hemen önce
+yeniden ölçer; o arada staged klonun `.git/` içinde değişen tek bayt bile
+kurulumu bu hatayla düşürür. Bilinen sebep: VS Code Remote-SSH Git
+eklentisinin `~/.hermes/plugins` altında yeni beliren her `.git` dizinini
+otomatik repo olarak açıp `.git/config`'e
+`branch.main.vscode-merge-base` satırını yazması — yazım tam hash kontrolüyle
+yayın arasına denk gelirse yarış olur. Bu yüzden bazen başarılı, bazen hatalı
+biter; plugin'de/manifestte bir sorun yoktur.
+
+- **Kalıcı çözüm:** VS Code ayarlarına `"git.autoRepositoryDetection":
+  "openEditors"` ekle (ya da kurulum sırasında pencereyi kapat).
+- **Geçici çözüm:** komutu tekrar çalıştır — yarış penceresi denk gelmezse
+  kurulur.
+- **Garantili yol (elle):**
+
+```bash
+git clone https://github.com/yelsoft16/software-team ~/.hermes/plugins/software-team
+hermes plugins adopt software-team
+```
+
+### "doesn't contain plugin.yaml" uyarısı
+
+Zararsız: manifest `.hermes-plugin/plugin.yaml` içinde olduğu için kök
+kontrolü onu bulamaz; plugin düzgün kurulur ve çalışır.
+
 ## Ekip (8 rol)
 
 | Rol | Görev | Model (varsayılan) | Reasoning |
