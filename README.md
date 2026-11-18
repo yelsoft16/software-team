@@ -23,13 +23,25 @@ modellere gider.
 ## Kurulum
 
 ```bash
-# plugin dizinini kopyala (git clone ya da dosya kopyası — ikisi de destekli)
-git clone <bu-repo> ~/.hermes/plugins/software-team
-
-# Hermes'i yeniden başlat; ardından:
-hermes plugins list      # software-team enabled görünmeli
-hermes plugins show software-team   # sorun varsa burada görünür
+hermes plugins install yelsoft16/software-team --enable
 ```
+
+Kurulumdan sonra Hermes gateway'ini yeniden başlat — yeni modül yüklemede
+devreye girer. `main` her zaman son stabil sürümdür.
+
+Alternatif (elle): `git clone https://github.com/yelsoft16/software-team ~/.hermes/plugins/software-team`
+ardından `hermes plugins adopt software-team` (provenance'a alır, update
+takibine bağlar).
+
+## Güncelleme
+
+```bash
+hermes plugins check-updates        # yeni commit var mı?
+hermes plugins update software-team # varsa uygula
+```
+
+Güncellemeden sonra da gateway'i yeniden başlat. Sürüm çıpaları GitHub
+Releases'te (`vX.Y.Z` tag'ları); git kurulumu commit bazında takip edilir.
 
 İlk oturumda plugin şunları yapar:
 
