@@ -14,6 +14,7 @@ def test_build_routes_maps_fields():
 def test_sync_preserves_foreign_routes(mocker):
     store = mocker.Mock()
     store.routes.return_value = [{"name": "handmade", "description": "x", "provider": "p", "model": "m"}]
+    store.route_default.return_value = "handmade"
     mocker.patch.object(st_sync, "load_store", return_value=store)
     import tempfile
     with tempfile.TemporaryDirectory() as d:
@@ -22,6 +23,7 @@ def test_sync_preserves_foreign_routes(mocker):
         merged = store.save_routes.call_args[0][0]
         names = [r["name"] for r in merged]
         assert names == ["handmade", "explore"]
+        assert store.save_routes.call_args[0][1] == "handmade"  # user-set default passed through, never wiped
         store.set_mode.assert_called_once_with("model_map")
         assert json.loads(sp.read_text()) == ["explore"]
 
@@ -32,6 +34,7 @@ def test_sync_removes_stale_own_route(mocker):
         {"name": "scout", "description": "old", "provider": "p", "model": "m"},
         {"name": "handmade", "description": "x", "provider": "p", "model": "m"},
     ]
+    store.route_default.return_value = ""  # absent default stays unset (never written)
     mocker.patch.object(st_sync, "load_store", return_value=store)
     import tempfile
     with tempfile.TemporaryDirectory() as d:
@@ -40,6 +43,7 @@ def test_sync_removes_stale_own_route(mocker):
         st_sync.sync_routes([{"name": "explore", "description": "s", "model": "m", "provider": "p"}], sp)
         merged = store.save_routes.call_args[0][0]
         assert [r["name"] for r in merged] == ["handmade", "explore"]
+        assert store.save_routes.call_args[0][1] == ""
 
 
 def test_sync_noop_when_unchanged(mocker):

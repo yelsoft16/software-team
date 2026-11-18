@@ -97,7 +97,8 @@ def sync_routes(agents: list[dict], state_path: Path) -> dict:
     """
     with _SYNC_LOCK:
         store = load_store()
-        current = list(store.routes(store.delegation_section()))
+        section = store.delegation_section()
+        current = list(store.routes(section))
         previous = set(_read_state(state_path))
         desired = build_routes(agents)
         desired_by_name = {route["name"]: route for route in desired}
@@ -117,7 +118,10 @@ def sync_routes(agents: list[dict], state_path: Path) -> dict:
             "unchanged": _route_key(merged) == _route_key(current),
         }
         if not summary["unchanged"]:
-            store.save_routes(merged)
+            # Pass the existing default back unchanged: the store's save keeps any
+            # pre-set default when given "" (never removed), so without this a
+            # user-set backends.model_map.default would be wiped on the first write.
+            store.save_routes(merged, store.route_default(section))
             store.set_mode("model_map")
         state_path.parent.mkdir(parents=True, exist_ok=True)
         state_path.write_text(json.dumps(desired_names, indent=2) + "\n")
