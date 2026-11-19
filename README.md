@@ -133,7 +133,10 @@ Superpowers fazları rollerle eşleşir: `brainstorming` → consultant,
 `requesting-code-review` → reviewer, `systematic-debugging` → debugger,
 `verification-before-completion` → orkestratörün kendisi. Dağıtım kuralları,
 sonuç doğrulama ve fallback kurallarının tamamı `team-protocol` skill'inde
-yazar — orkestratör her oturumda onu referans alır.
+yazar — orkestratör her oturumda onu referans alır. Her delegasyon hafıza
+döngüsünden geçer (dispatch öncesi recall, rapor sözleşmesinde zorunlu
+Öğrenimler bölümü, görev sonrası hindsight'a retain); ayrıntılar
+`team-protocol` skill'inde.
 
 ## Hafıza bakımı
 

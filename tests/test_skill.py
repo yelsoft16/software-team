@@ -24,6 +24,11 @@ def test_skill_frontmatter_and_sections():
         "reviewer",
         "delegate_task",
         "doğrulama",
+        "Hafıza döngüsü",
+        "hindsight_recall",
+        "hindsight_retain",
+        "Öğrenimler",
+        "steer",
     ]:
         assert needle in text
 
