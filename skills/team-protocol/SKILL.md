@@ -39,7 +39,8 @@ geçerlidir, `enabled: false` olanlar ne rotada ne çizelgede vardır):
 - **Taze child context'ini sen kurarsın.** Child senin oturum geçmişini
   görmez; senin gördüğün hiçbir şeyi görmediğini asla varsayma. Görevi,
   ilgili dosya yollarını, plan/spec parçalarını, hata log'unu ve kabul
-  ölçütlerini child'ın goal/context'ine açıkça yaz.
+  ölçütlerini child'ın goal/context'ine açıkça yaz; child context ayrıca
+  ilgili hindsight anıları + rapor sözleşmesi (Öğrenimler zorunlu) içerir.
 - **Rolün prompt'unu team.jsonc'ten oku** (`~/.hermes/software-team/team.jsonc`
   içindeki `prompt` alanı) ve child'ın goal/context'ine ekle — çizelgede
   prompt yoktur, config dosyasında durur.
@@ -60,6 +61,35 @@ geçerlidir, `enabled: false` olanlar ne rotada ne çizelgede vardır):
   (implementer → yeniden reviewer) işlet; kök neden belirsizse debugger'a ver.
 - Kanıtsız çıktı (uydurma test sonucu, görmediği dosyayı anlatma) → raporu
   reddet, kanıt iste.
+
+## Hafıza döngüsü (memory-aware orchestration)
+
+Subagent'ların hindsight/memory araçlarına erişimi YOKTUR (doğrulandı): hafıza
+akışı yalnız orkestratörün elinden geçer. Kullanıcının önceliği maliyet değil;
+daha çok görüş, daha zeki kararlar, daha çok birikim. Her delegasyon bu
+döngüden geçer:
+
+1. **Dispatch öncesi — hatırla:** İşi anlarken `hindsight_recall` ile konuya
+   ilişkin anıları çek (geçmiş kararlar, denemeler, kullanıcı tercihleri).
+   İlgili bulguları child'ın context'ine açıkça göm — çocuk geçmişi yalnız
+   senin üzerinden bilir.
+2. **Dispatch — odakla:** Child context'i = rol prompt'u + görev + plan/spec parçaları +
+   hata log'u + dosya yolları + kabul ölçütleri + ilgili anılar + **rapor sözleşmesi**: rapor
+   zorunlu olarak "Öğrenimler" bölümü taşır (ne işe yaradı, ne yaramadı,
+   hangi karar neden verildi, sürprizler). Fix raporlarında da aynı bölüm
+   istenir.
+3. **Yol ortası — yönlendir:** Steer sayı sınırı yoktur — ilerleme görüldükçe
+   (transcript büyüyor, araç çağrıları ilerliyor) çocuk bağlam istedikçe ya
+   da yönlendirme fayda edecekçe `steer` ile beslenir. Tek durma koşulu
+   takılı kalmadır: transcript ilerlemiyorsa oyalama — ya taze bağlamla son
+   bir steer ya da stop edip işi kendine al / debugger'a ver.
+4. **Görev sonrası — biriktir:** Çocuğun Öğrenimler bölümünü oku, gerçek
+   diff/çıktıyla tutarlı olanları damıt (1–3 yüksek sinyalli ders: karar +
+   gerekçe + sonuç) ve `hindsight_retain` ile işle. Tutarsız ya da uydurma
+   görünen öğrenimi alma.
+5. **Kanıt kuralı değişmez:** Döngü, "child'ın iddiası kanıt değildir"
+   kuralını esnetmez; öğrenim iddiaları dahil her şey orkestratörün
+   doğrulamasından geçer.
 
 ## Fallback kuralları
 
