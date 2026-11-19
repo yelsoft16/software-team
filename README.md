@@ -52,8 +52,8 @@ Releases'te (`vX.Y.Z` tag'ları); git kurulumu commit bazında takip edilir.
    senkronlar, backend'i `model_map` yapar ve `max_parallel`'ı
    `delegation.max_concurrent_children`'a yazar. Elle eklediğin yabancı
    rotalar korunur.
-3. Oturumun ilk turunda orkestratöre kompakt çizelge + protokol enjekte eder.
-   Subagent'lara asla enjekte edilmez.
+3. Oturumun ilk turunda orkestratöre kompakt çizelge + protokol + bakım
+   hatırlatması enjekte eder. Subagent'lara asla enjekte edilmez.
 
 ## Sorun giderme
 
@@ -134,6 +134,24 @@ Superpowers fazları rollerle eşleşir: `brainstorming` → consultant,
 `verification-before-completion` → orkestratörün kendisi. Dağıtım kuralları,
 sonuç doğrulama ve fallback kurallarının tamamı `team-protocol` skill'inde
 yazar — orkestratör her oturumda onu referans alır.
+
+## Hafıza bakımı
+
+Plugin hafıza bakımını da takip eder: oturumun **ilk turunda** orkestratörün
+context'ine (asla subagent'lara) tek satırlık bir hatırlatma eklenir — bakım
+vakti geldiyse. Vakit, `~/.hermes/software-team/maintenance.json` dosyasındaki
+son hatırlatma zamanına göre hesaplanır; aralık **7 gündür** ve `team.jsonc`'te
+`maintenance.interval_days` ile değiştirilebilir. Bozuk bir değer (tamsayı
+olmayan ya da 1'den küçük) uyarı verir ve aralık 7'ye döner.
+
+Bakımı tetiklemek için **'bakım yapalım'** de; `memory-maintenance` skill'i
+devreye girer: hafıza dosyalarını okur, yüksek sinyalli olguları hindsight'a
+retain eder, doluluk yüksekse küçültme önerisi sunar ve bakım kaydını
+günceller. Küçültmeden önce dosyalar `~/.hermes/software-team/backups/` altına
+`<dosyaadı>-<YYYYmmdd-HHMMSS>.md` zaman damgalı kopyalarla yedeklenir.
+
+**Onaysız yazım yoktur:** kullanıcı onayı olmadan hiçbir hafıza dosyası
+değiştirilmez. `SOUL.md` yalnız okunur, asla düzenlenmez.
 
 ## Geliştirme
 

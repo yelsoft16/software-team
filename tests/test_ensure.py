@@ -170,3 +170,16 @@ def test_missing_template_raises_only_when_seeding_is_needed(tmp_path):
     ):
         team, state = mod.ensure_user_config()
     assert team.read_text() == "{}" and state.is_file()
+
+
+def test_template_maintenance_block_parses():
+    import st_config
+    import st_maintenance
+    cfg = st_config.parse_team_config(TEMPLATE)
+    assert cfg["maintenance"] == {"interval_days": 7}
+    assert st_maintenance.parse_maintenance_block(cfg["maintenance"]) == (7, None)
+
+def test_template_maintenance_comment_documents_default():
+    text = TEMPLATE.read_text(encoding="utf-8")
+    head = text.split("\n{", 1)[0]
+    assert "maintenance" in head.lower() and "7" in head  # varsayılanı belgeler

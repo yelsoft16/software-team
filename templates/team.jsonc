@@ -6,10 +6,16 @@
 // reasoning: minimal | low | medium | high | xhigh | max | ultra
 // Alanı tamamen atlamak provider varsayılanını kullanır (explore böyle).
 // enabled: false eklenen agent ne rotaya ne çizelgeye girer.
+// maintenance.interval_days: hafıza bakımı hatırlatma aralığı (gün; yoksa varsayılan 7).
 //
 // provider bir Hermes config provider ADIDIR; endpoint ve anahtar buraya yazılmaz.
 {
   "max_parallel": 4,
+  // Opsiyonel: N günde bir hafıza bakımı hatırlatması. Blok yoksa 7 kullanılır;
+  // 1'den küçük veya tamsayı olmayan değer uyarı verir, 7 kullanılır.
+  "maintenance": {
+    "interval_days": 7
+  },
   "agents": [
     {
       "name": "explore",

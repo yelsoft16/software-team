@@ -8,9 +8,11 @@ while team.jsonc's mtime is unchanged.
 """
 
 import importlib.util
+import json
 import logging
 import os
 import pathlib
+from datetime import datetime, timezone
 
 import pytest
 
@@ -135,8 +137,13 @@ def test_live_dir_respects_hermes_home(monkeypatch, tmp_path):
 # --- guard tests: pipeline behavior ---------------------------------------------------
 
 
-def _pipeline_mod(mocker, tmp_path, *, team_text=None):
-    """Load the plugin with ensure_user_config pointed at tmp files."""
+def _pipeline_mod(mocker, tmp_path, *, team_text=None, maint=False):
+    """Load the plugin with ensure_user_config pointed at tmp files.
+
+    maint=False stubs the maintenance step out (existing tests run without it)
+    and keeps the 5-tuple; maint=True points ``_maintenance_paths`` at tmp files
+    and returns a 6-tuple carrying the maintenance state path.
+    """
     mod = _load()
     team = tmp_path / "team.jsonc"
     state = tmp_path / "state.json"
@@ -146,6 +153,12 @@ def _pipeline_mod(mocker, tmp_path, *, team_text=None):
     mocker.patch.object(mod, "known_providers", return_value={"p"})
     sync_routes = mocker.patch.object(mod, "sync_routes")
     sync_concurrency = mocker.patch.object(mod, "sync_concurrency")
+    if maint:
+        maint_state = tmp_path / "maintenance.json"
+        memories = tmp_path / "memories"
+        mocker.patch.object(mod, "_maintenance_paths", return_value=(maint_state, memories))
+        return mod, team, state, sync_routes, sync_concurrency, maint_state
+    mocker.patch.object(mod, "_maintenance_reminder", return_value="")
     return mod, team, state, sync_routes, sync_concurrency
 
 
@@ -259,3 +272,40 @@ def test_hook_survives_pipeline_crash(mocker):
     mod.register(ctx)
     res = ctx.hook(is_first_turn=True, platform="cli")
     assert isinstance(res, dict) and "boom" in res["context"]
+
+
+# --- guard tests: memory-maintenance reminder ----------------------------------------
+
+
+def test_pipeline_appends_reminder_when_due(mocker, tmp_path):
+    mod, _, _, _, _, maint_state = _pipeline_mod(mocker, tmp_path, team_text=VALID_TEAM, maint=True)
+    roster = mod._pipeline()
+    assert "🧹 Hafıza bakımı bekliyor" in roster
+    assert "henüz bakım kaydı yok" in roster              # ilk çalıştırma: state yok
+    assert "last_reminded" in json.loads(maint_state.read_text())  # ateşleme state'i yazdı
+
+def test_pipeline_skips_reminder_when_not_due(mocker, tmp_path):
+    mod, _, _, _, _, _ = _pipeline_mod(mocker, tmp_path, team_text=VALID_TEAM, maint=True)
+    mocker.patch.object(mod, "read_state",
+                        return_value=(datetime.now(timezone.utc).isoformat(), None))
+    roster = mod._pipeline()
+    assert "🧹" not in roster
+
+def test_pipeline_reminder_failure_degrades_to_log_only(mocker, tmp_path, caplog):
+    mod, _, _, _, _, _ = _pipeline_mod(mocker, tmp_path, team_text=VALID_TEAM, maint=True)
+    mocker.patch.object(mod, "_maintenance_reminder", side_effect=RuntimeError("maint boom"))
+    roster = mod._pipeline()                              # asla raise etmez
+    assert "explore" in roster and "🧹" not in roster
+    assert any("maintenance" in r.message and r.levelno == logging.WARNING for r in caplog.records)
+
+def test_cached_pipeline_reevaluates_maintenance(mocker, tmp_path):
+    mod, _, _, _, _, maint_state = _pipeline_mod(mocker, tmp_path, team_text=VALID_TEAM, maint=True)
+    first = mod._pipeline()
+    assert "🧹" in first                                   # ateşlendi → state yazıldı
+    second = mod._pipeline()                               # aynı mtime: roster önbellekten
+    assert "🧹" not in second                              # bakım yeniden değerlendirildi → sessiz
+
+def test_reminder_line_fits_hook_budget(mocker, tmp_path):
+    mod, _, _, _, _, _ = _pipeline_mod(mocker, tmp_path, team_text=VALID_TEAM, maint=True)
+    reminder = next(l for l in mod._pipeline().splitlines() if "🧹" in l)
+    assert len(reminder) <= 200                            # bütçe: ~1KB içinde tek satır
