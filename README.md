@@ -43,6 +43,11 @@ hermes plugins update software-team # varsa uygula
 Güncellemeden sonra da gateway'i yeniden başlat. Sürüm çıpaları GitHub
 Releases'te (`vX.Y.Z` tag'ları); git kurulumu commit bazında takip edilir.
 
+> **v0.3.0 notu (mevcut kurulumlar):** `qa` rolü canlı `team.jsonc`'ye otomatik
+> eklenmez (dosya kullanıcıya aittir). Şablondaki `qa` kaydını
+> `~/.hermes/software-team/team.jsonc`'ye elle ekleyip kaydet; bir sonraki
+> turda rota senkronu 9. rotayı yazar.
+
 İlk oturumda plugin şunları yapar:
 
 1. `~/.hermes/software-team/` altına `team.jsonc` (şablondan kopya) ve
