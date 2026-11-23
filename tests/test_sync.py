@@ -125,7 +125,7 @@ def test_sync_saves_9th_qa_route_with_model_and_reasoning(mocker):
             [None, "max", "high", "max", "high", "max", "max", "high"],
         )
     ]
-    agents.append({"name": "qa", "description": "QA icrasisi", "model": "mimo-v2.6-flash",
+    agents.append({"name": "qa", "description": "QA icracısı", "model": "mimo-v2.6-flash",
                    "provider": "p", "reasoning": "high"})
     import tempfile
     with tempfile.TemporaryDirectory() as d:
