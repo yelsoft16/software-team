@@ -21,7 +21,7 @@ def test_manifest_declares_hook_and_version():
     with open(PLUGIN_DIR / ".hermes-plugin" / "plugin.yaml") as f:
         m = yaml.safe_load(f)
     assert m["name"] == "software-team"
-    assert m["version"] == "0.2.0"
+    assert m["version"] == "0.2.1"
     assert m["provides_hooks"] == ["pre_llm_call"]
     assert m["requires_hermes"] == ">=0.22.5"
 
