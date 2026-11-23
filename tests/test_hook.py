@@ -48,8 +48,8 @@ def test_roster_under_1kb():
     agents = [
         {"name": n, "description": f"desc {n}", "model": f"m-{n}", "provider": "p", "reasoning": r}
         for n, r in zip(
-            ["explore", "researcher", "consultant", "planner", "implementer", "reviewer", "debugger", "writer"],
-            [None, "max", "high", "max", "high", "max", "max", "high"],
+            ["explore", "researcher", "consultant", "planner", "implementer", "reviewer", "debugger", "writer", "qa"],
+            [None, "max", "high", "max", "high", "max", "max", "high", "high"],
         )
     ]
     roster = mod.build_roster(agents)
@@ -96,7 +96,7 @@ def test_roster_truncates_with_marker_when_over_budget():
     mod = _load()
     agents = [
         {"name": n, "description": "d" * 200, "model": f"m-{n}", "provider": "p", "reasoning": "high"}
-        for n in ["explore", "researcher", "consultant", "planner", "implementer", "reviewer", "debugger", "writer"]
+        for n in ["explore", "researcher", "consultant", "planner", "implementer", "reviewer", "debugger", "writer", "qa"]
     ]
     roster = mod.build_roster(agents)
     assert len(roster) <= 1024
@@ -116,14 +116,28 @@ def test_roster_no_truncation_within_budget():
     agents = [
         {"name": n, "description": f"desc {n}", "model": f"m-{n}", "provider": "p", "reasoning": r}
         for n, r in zip(
-            ["explore", "researcher", "consultant", "planner", "implementer", "reviewer", "debugger", "writer"],
-            [None, "max", "high", "max", "high", "max", "max", "high"],
+            ["explore", "researcher", "consultant", "planner", "implementer", "reviewer", "debugger", "writer", "qa"],
+            [None, "max", "high", "max", "high", "max", "max", "high", "high"],
         )
     ]
     roster = mod.build_roster(agents)
     assert len(roster) <= 1024
     assert "⚠ roster truncated" not in roster
-    assert roster.count("\n") == 1 + 8 + 4  # full protocol block survives
+    assert roster.count("\n") == 1 + 9 + 4  # full protocol block survives
+
+
+def test_template_nine_agent_roster_fits_budget_without_truncation():
+    mod = _load()
+    data = mod.parse_team_config(PLUGIN_DIR / "templates" / "team.jsonc")
+    agents, warnings = mod.validate_agents(data["agents"], {"api-yelsoft-online"})
+    assert warnings == []  # every template agent validates clean
+    assert len(agents) == 9                          # 9-agent pin: qa is registered
+    qa = next(agent for agent in agents if agent["name"] == "qa")
+    assert qa["model"] == "mimo-v2.6-flash" and qa["reasoning"] == "high"
+    roster = mod.build_roster(agents)
+    assert len(roster) <= 1024
+    assert "⚠ roster truncated" not in roster
+    assert roster.count("\n") == 1 + 9 + 4  # header + 9 agents + full protocol block
 
 
 def test_live_dir_respects_hermes_home(monkeypatch, tmp_path):

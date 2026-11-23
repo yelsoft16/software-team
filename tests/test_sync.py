@@ -111,6 +111,36 @@ def test_sync_foreign_route_with_list_value_does_not_raise(mocker):
     assert st_sync._route_key(routes) == st_sync._route_key(list(reversed(routes)))
 
 
+def test_sync_saves_9th_qa_route_with_model_and_reasoning(mocker):
+    # pin: the 9-agent team (qa as 9th) flows through route sync with its
+    # model and reasoning resolved — qa = mimo-v2.6-flash @ high (owner decision).
+    store = mocker.Mock()
+    store.routes.return_value = []
+    store.route_default.return_value = ""
+    mocker.patch.object(st_sync, "load_store", return_value=store)
+    agents = [
+        {"name": n, "description": f"desc {n}", "model": f"m-{n}", "provider": "p", "reasoning": r}
+        for n, r in zip(
+            ["explore", "researcher", "consultant", "planner", "implementer", "reviewer", "debugger", "writer"],
+            [None, "max", "high", "max", "high", "max", "max", "high"],
+        )
+    ]
+    agents.append({"name": "qa", "description": "QA icrasisi", "model": "mimo-v2.6-flash",
+                   "provider": "p", "reasoning": "high"})
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        sp = pathlib.Path(d) / "state.json"
+        summary = st_sync.sync_routes(agents, sp)
+        merged = store.save_routes.call_args[0][0]
+        assert [r["name"] for r in merged] == [a["name"] for a in agents]
+        assert "qa" in summary["added"]
+        qa = next(r for r in merged if r["name"] == "qa")
+        assert qa["model"] == "mimo-v2.6-flash"
+        assert qa["reasoning_effort"] == "high" and "reasoning" not in qa
+        assert json.loads(sp.read_text()) == [a["name"] for a in agents]
+        store.set_mode.assert_called_once_with("model_map")
+
+
 def test_sync_saves_routes_before_setting_mode(mocker):
     store = mocker.Mock()
     store.routes.return_value = []

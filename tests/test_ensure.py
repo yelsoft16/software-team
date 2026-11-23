@@ -20,7 +20,7 @@ TEMPLATE = PLUGIN_DIR / "templates" / "team.jsonc"
 
 AGENT_ORDER = [
     "explore", "researcher", "consultant", "planner",
-    "implementer", "reviewer", "debugger", "writer",
+    "implementer", "reviewer", "debugger", "writer", "qa",
 ]
 
 
@@ -41,7 +41,7 @@ def _template_config():
 # --- the brief's tests ---------------------------------------------------------------
 
 
-def test_template_has_eight_agents_with_doc_models():
+def test_template_has_nine_agents_with_doc_models():
     text = TEMPLATE.read_text(encoding="utf-8")
     body = re.sub(r"//[^\n]*", "", text)
     cfg = json.loads(body)
@@ -51,6 +51,7 @@ def test_template_has_eight_agents_with_doc_models():
     assert by_name["explore"]["model"] == "gemini-3.1-flash-lite" and "reasoning" not in by_name["explore"]
     assert by_name["planner"]["model"] == "deepseek-v4-pro" and by_name["planner"]["reasoning"] == "max"
     assert by_name["consultant"]["model"] == "cx/gpt-5.6-sol" and by_name["consultant"]["reasoning"] == "high"
+    assert by_name["qa"]["model"] == "mimo-v2.6-flash" and by_name["qa"]["reasoning"] == "high"
     assert all(a["provider"] == "api-yelsoft-online" for a in cfg["agents"])
 
 
@@ -79,6 +80,7 @@ def test_template_matches_spec_model_table_and_max_parallel():
         "reviewer": ("glm-5.3-flash", "max"),
         "debugger": ("deepseek-v4-pro", "max"),
         "writer": ("mimo-v2.6-flash", "high"),
+        "qa": ("mimo-v2.6-flash", "high"),
     }
     assert set(by_name) == set(expected)
     for name, (model, reasoning) in expected.items():
