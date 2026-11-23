@@ -33,6 +33,49 @@ def test_skill_frontmatter_and_sections():
         assert needle in text
 
 
+def test_skill_evidence_discipline_fix_loop_and_qa_row():
+    text = SKILL.read_text(encoding="utf-8")
+    for needle in [
+        "Kanıt disiplini",
+        "Önce keşif",
+        "Varsayım yasağı",
+        "kanıt kaynakları",
+        "slop denetimi",
+        "| qa |",
+    ]:
+        assert needle in text
+
+
+def test_rol_sozlesmeleri_nine_five_block_contracts():
+    """One contract per role (each role name exactly once) with the five
+    mandated blocks in every contract."""
+    ref = PLUGIN_DIR / "skills" / "team-protocol" / "references" / "rol-sozlesmeleri.md"
+    assert ref.is_file()
+    text = ref.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    for role in [
+        "explore",
+        "researcher",
+        "consultant",
+        "planner",
+        "implementer",
+        "reviewer",
+        "debugger",
+        "writer",
+        "qa",
+    ]:
+        assert text.count(role) == 1
+        assert sum(1 for line in lines if line.strip() == f"## {role}") == 1
+    for block in [
+        "**Kısıtlar**",
+        "**İş metodu**",
+        "**Çıktı biçimi**",
+        "**Başarı & başarısızlık koşulları**",
+        "**NEVER-ALWAYS**",
+    ]:
+        assert sum(1 for line in lines if line.strip() == block) == 9
+
+
 def test_skill_description_fits_catalogue_limit():
     text = SKILL.read_text(encoding="utf-8")
     frontmatter = text.split("---", 2)[1]

@@ -1,6 +1,6 @@
 # software-team
 
-Hermes için 8 kişilik yazılım ekibi: tek bir `team.jsonc` dosyasından yönetilen
+Hermes için 9 kişilik yazılım ekibi: tek bir `team.jsonc` dosyasından yönetilen
 rol çizelgesi, rol başına model rotaları ve orkestratör protokolü. Kullanıcı
 ana modelle konuşur; ana model orkestratördür — işi superpowers workflow'u
 üzerinden yürütür, alt işleri `delegate_task` ile rol bazlı model rotalarına
@@ -43,12 +43,17 @@ hermes plugins update software-team # varsa uygula
 Güncellemeden sonra da gateway'i yeniden başlat. Sürüm çıpaları GitHub
 Releases'te (`vX.Y.Z` tag'ları); git kurulumu commit bazında takip edilir.
 
+> **v0.3.0 notu (mevcut kurulumlar):** `qa` rolü canlı `team.jsonc`'ye otomatik
+> eklenmez (dosya kullanıcıya aittir). Şablondaki `qa` kaydını
+> `~/.hermes/software-team/team.jsonc`'ye elle ekleyip kaydet; bir sonraki
+> turda rota senkronu 9. rotayı yazar.
+
 İlk oturumda plugin şunları yapar:
 
 1. `~/.hermes/software-team/` altına `team.jsonc` (şablondan kopya) ve
    `state.json` (rota sahipliği) oluşturur. Var olan dosyalara **asla**
    dokunmaz.
-2. `team.jsonc`'teki 8 rolü `delegation.backends.model_map.options` rotalarına
+2. `team.jsonc`'teki 9 rolü `delegation.backends.model_map.options` rotalarına
    senkronlar, backend'i `model_map` yapar ve `max_parallel`'ı
    `delegation.max_concurrent_children`'a yazar. Elle eklediğin yabancı
    rotalar korunur.
@@ -84,7 +89,7 @@ hermes plugins adopt software-team
 Zararsız: manifest `.hermes-plugin/plugin.yaml` içinde olduğu için kök
 kontrolü onu bulamaz; plugin düzgün kurulur ve çalışır.
 
-## Ekip (8 rol)
+## Ekip (9 rol)
 
 | Rol | Görev | Model (varsayılan) | Reasoning |
 |---|---|---|---|
@@ -96,11 +101,13 @@ kontrolü onu bulamaz; plugin düzgün kurulur ve çalışır.
 | `reviewer` | Diff'i spec'e karşı denetler (kritik/önemli/minör) | glm-5.3-flash | max |
 | `debugger` | Kök neden bulur: hata, kırık test, performans | deepseek-v4-pro | max |
 | `writer` | Doküman, README, commit metinleri | mimo-v2.6-flash | high |
+| `qa` | Gerçek senaryoları çalıştırır, artifact'lı kanıt matrisi üretir | mimo-v2.6-flash | high |
 
 Rol adı = rota adı. `delegate_task`'ta görevi hangi rolle çalıştırmak
 istiyorsan `option` olarak o adı seçersin; model/provider/reasoning rotada
 çözülür. Rota seçilmeyen iş bilinçli olarak orkestratörde kalır (model_map
-`default` rotası tanımlanmaz).
+`default` rotası tanımlanmaz). Rollerin davranış sözleşmeleri (çıktı biçimi +
+başarı/başarısızlık koşulları) `skills/team-protocol/references/rol-sozlesmeleri.md`'dedir.
 
 ## team.jsonc
 

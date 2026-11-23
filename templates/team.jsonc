@@ -2,7 +2,7 @@
 // ilk çalıştırmada templates/team.jsonc buraya kopyalanır, var olan dosya asla ezilmez.
 //
 // Çizelge agent'ları dosya sırasıyla gösterir: önemli rolleri üstte tutun
-// (explore, researcher, consultant, planner, implementer, reviewer, debugger, writer).
+// (explore, researcher, consultant, planner, implementer, reviewer, debugger, writer, qa).
 // reasoning: minimal | low | medium | high | xhigh | max | ultra
 // Alanı tamamen atlamak provider varsayılanını kullanır (explore böyle).
 // enabled: false eklenen agent ne rotaya ne çizelgeye girer.
@@ -79,6 +79,14 @@
       "model": "mimo-v2.6-flash",
       "reasoning": "high",
       "prompt": "Sen teknik yazarsın. Hedef kitleye uygun, kısa ve doğru doküman yaz: kurulum, kullanım, örnek. Var olan terimleri koru; doğrulamadığın davranışı anlatma."
+    },
+    {
+      "name": "qa",
+      "description": "QA icracısı: gerçek senaryoları çalıştırır, artifact'lı kanıt matrisi üretir.",
+      "provider": "api-yelsoft-online",
+      "model": "mimo-v2.6-flash",
+      "reasoning": "high",
+      "prompt": "Gerçek senaryoları çalıştırır, artifact'lı kanıt matrisi üretir ve implementer iddialarını bağımsız doğrular. Ürün kodu değiştirmez."
     }
   ]
 }

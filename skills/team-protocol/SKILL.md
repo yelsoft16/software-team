@@ -16,7 +16,7 @@ tekrarlamaz; çizelgedeki rollerin **nasıl kullanılacağını** anlatır.
 
 ## Rol → iş eşlemesi
 
-Hangi superpowers fazında hangi rol çalışır (8 rol; çizelgede görünenler
+Hangi superpowers fazında hangi rol çalışır (9 rol; çizelgede görünenler
 geçerlidir, `enabled: false` olanlar ne rotada ne çizelgede vardır):
 
 | Superpowers fazı / iş türü | Rol(ler) | Not |
@@ -30,6 +30,7 @@ geçerlidir, `enabled: false` olanlar ne rotada ne çizelgede vardır):
 | Doküman, README, commit metni | writer | terimleri korur, kısa yazar |
 | Yabancı repo taraması, dosya/sembol arama | explore | yol:satır referanslı kısa liste döner |
 | Dış kaynak araştırması (doküman, web, API) | researcher | her iddiaya kaynak bağlantısı |
+| QA doğrulaması, gerçek senaryo çalıştırma | qa | her GEÇTİ dolu artifact'a bağlanır |
 
 ## Dağıtım kuralları (dispatch)
 
@@ -38,9 +39,10 @@ geçerlidir, `enabled: false` olanlar ne rotada ne çizelgede vardır):
   sen yalnızca rolü seçersin.
 - **Taze child context'ini sen kurarsın.** Child senin oturum geçmişini
   görmez; senin gördüğün hiçbir şeyi görmediğini asla varsayma. Görevi,
-  ilgili dosya yollarını, plan/spec parçalarını, hata log'unu ve kabul
-  ölçütlerini child'ın goal/context'ine açıkça yaz; child context ayrıca
-  ilgili hindsight anıları + rapor sözleşmesi (Öğrenimler zorunlu) içerir.
+  ilgili dosya yollarını, plan/spec parçalarını, hata log'unu, kanıt
+  kaynaklarını ve kabul ölçütlerini child'ın goal/context'ine açıkça yaz;
+  child context ayrıca ilgili hindsight anıları + rapor sözleşmesi (Öğrenimler
+  zorunlu) içerir.
 - **Rolün prompt'unu team.jsonc'ten oku** (`~/.hermes/software-team/team.jsonc`
   içindeki `prompt` alanı) ve child'ın goal/context'ine ekle — çizelgede
   prompt yoktur, config dosyasında durur.
@@ -62,6 +64,15 @@ geçerlidir, `enabled: false` olanlar ne rotada ne çizelgede vardır):
 - Kanıtsız çıktı (uydurma test sonucu, görmediği dosyayı anlatma) → raporu
   reddet, kanıt iste.
 
+## Fix Loop kuralları
+
+Düzeltme loop'u (implementer → yeniden reviewer) her turda şu kontrol
+listesinden geçer ve sonuç raporuna not edilir:
+
+- slop denetimi — tautolojik test, implementasyonu yansıtan test, yalnızca
+  silmeyi doğrulayan test, gereksiz soyutlama kontrol edilir ve rapora not
+  edilir.
+
 ## Hafıza döngüsü (memory-aware orchestration)
 
 Subagent'ların hindsight/memory araçlarına erişimi YOKTUR (doğrulandı): hafıza
@@ -74,7 +85,7 @@ döngüden geçer:
    İlgili bulguları child'ın context'ine açıkça göm — çocuk geçmişi yalnız
    senin üzerinden bilir.
 2. **Dispatch — odakla:** Child context'i = rol prompt'u + görev + plan/spec parçaları +
-   hata log'u + dosya yolları + kabul ölçütleri + ilgili anılar + **rapor sözleşmesi**: rapor
+   hata log'u + kanıt kaynakları + dosya yolları + kabul ölçütleri + ilgili anılar + **rapor sözleşmesi**: rapor
    zorunlu olarak "Öğrenimler" bölümü taşır (ne işe yaradı, ne yaramadı,
    hangi karar neden verildi, sürprizler). Fix raporlarında da aynı bölüm
    istenir.
@@ -91,6 +102,25 @@ döngüden geçer:
    kuralını esnetmez; öğrenim iddiaları dahil her şey orkestratörün
    doğrulamasından geçer.
 
+## Kanıt disiplini (evidence discipline)
+
+Her analiz/inceleme görevi bu üç kurala tabidir (oh-my-openagent ajan
+prompt'larından uyarlanmıştır):
+
+1. **Önce keşif, sonra analiz:** Sonuç üretmeden önce brief'teki kanıt
+   kaynaklarını gerçekten sorgula — dosyalar/plan/spec, erişilebilir veri
+   kaynakları (MCP konektörleri, ERP verisi, web). "Yalnız belgeyi oku" bir
+   analiz sayılmaz.
+2. **Varsayım yasağı:** Kanıta bakmadan varsayım kurma; erişemediğin kaynağı
+   erişilmiş gibi anlatma. Kaynak eksikse "erişilemedi" de ve bulgunu o
+   sınırla yaz.
+3. **Etkilenen kullanıcı / ideal-durum çerçevesi** (planner + reviewer):
+   Plan her ideal-durum satırını en az bir görev ve bir doğrulamayla
+   eşleştirmeli; eşleşmeyen satır bulgudur.
+
+Rolle özel sözleşmeler (çıktı biçimi, başarı/başarısızlık koşulları):
+`references/rol-sozlesmeleri.md`.
+
 ## Fallback kuralları
 
 - Rota seçilmeyen iş **orkestratörde kalır**: ekip bilinçli olarak model_map
@@ -98,7 +128,7 @@ döngüden geçer:
   işleri (tek satırlık düzeltme, isim sorma) delege etme.
 - Child başarısız veya boş rapor dönerse: bir kez taze child'la yeniden dene;
   yine olmazsa işi kendin yap ya da debugger'a kök neden analizi aç.
-- Yeni rol icat etme: ekip bu 8 rolden ibarettir. Gereken rol çizelgede yoksa
+- Yeni rol icat etme: ekip bu 9 rolden ibarettir. Gereken rol çizelgede yoksa
   işi sen yaparsın.
 
 ## team.jsonc kısa referansı
