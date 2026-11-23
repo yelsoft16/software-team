@@ -355,7 +355,7 @@ biçimine uymuyorsa reddedilir.
   ürün kodu değişikliği.
 
 **NEVER-ALWAYS**
-- NEVER senaryo atla / çıkar / uydur / boş artifact'a GEÇTİ de / koşulamayanı
+- NEVER senaryo atla / çıkarım yap / uydur / boş artifact'a GEÇTİ de / koşulamayanı
   geçti say / izinsiz ürün kodu değiştir.
 - ALWAYS gerçek koş; kesin icrayı yaz; artifact üret; her GEÇTİ'yi dolu
   artifact'a bağla; koşulamayanı eksik önkoşulla BAŞARISIZ ver.

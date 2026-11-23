@@ -30,7 +30,7 @@ geçerlidir, `enabled: false` olanlar ne rotada ne çizelgede vardır):
 | Doküman, README, commit metni | writer | terimleri korur, kısa yazar |
 | Yabancı repo taraması, dosya/sembol arama | explore | yol:satır referanslı kısa liste döner |
 | Dış kaynak araştırması (doküman, web, API) | researcher | her iddiaya kaynak bağlantısı |
-| qa | Gerçek senaryoları çalıştırır, artifact'lı kanıt matrisi üretir |
+| QA doğrulaması, gerçek senaryo çalıştırma | qa | her GEÇTİ dolu artifact'a bağlanır |
 
 ## Dağıtım kuralları (dispatch)
 
